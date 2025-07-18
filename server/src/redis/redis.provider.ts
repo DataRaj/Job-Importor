@@ -3,7 +3,9 @@ import { ConfigService } from '@nestjs/config';
 
 export const REDIS_CLIENT = 'REDIS_CLIENT';
 
-export const RedisProvider = {
+import type { Provider } from '@nestjs/common';
+
+export const RedisProvider: Provider = {
   provide: REDIS_CLIENT,
   inject: [ConfigService],
   useFactory: async (configService: ConfigService) => {
