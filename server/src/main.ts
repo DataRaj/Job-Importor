@@ -5,11 +5,11 @@ import { AppModule } from "./app.module";
 
 async function bootstrap() {
   const app = await NestFactory.create(AppModule);
-  
+  console.log(`server running on port http://localhost:${process.env.PORT || 3001}`);
   const configService = app.get(ConfigService);
   
   app.enableCors({
-    origin: 'http://localhost:5173',
+    origin: 'http://localhost:4000',
     methods: ['GET', 'POST', 'PUT', 'DELETE'],
     credentials: true,
   });
@@ -17,9 +17,8 @@ async function bootstrap() {
   const redisIoAdapter = new RedisIoAdapter(app);
   await redisIoAdapter.connectToRedis();
   
-  const port = configService.get<number>('PORT') ?? 3001;
-  console.log(`server running on port http://localhost:${port}`);
-  
+  const port = process.env.PORT ?? 3001;
+
   app.useWebSocketAdapter(redisIoAdapter);
   await app.listen(port);  
 }
