@@ -16,6 +16,8 @@ A robust job import system that fetches job data from external APIs, processes t
 ## 🏗️ Architecture
 ![System Architecture Diagram](docs/architecture.png)
 
+```
+
 ├── client/              # Next.js frontend application
 │   ├── src/
 │   │   ├── app/         # App Router pages (e.g., /import-logs, /jobs)
@@ -40,7 +42,7 @@ A robust job import system that fetches job data from external APIs, processes t
 │   └── architecture.md
 ├── .env.example         # Example environment variables
 └── README.md
-
+```
 🛠️ Technology Stack
 
 Backend
