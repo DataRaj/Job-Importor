@@ -6,7 +6,7 @@ import { Toaster } from '@/components/ui/sonner';
 const inter = Inter({ subsets: ['latin'] });
 
 export const metadata: Metadata = {
-  title: 'QuickCommerce Admin Dashboard',
+  title: ' ',
   description: 'Full-featured admin dashboard for quick commerce operations',
 };
 

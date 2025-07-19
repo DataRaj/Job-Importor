@@ -50,7 +50,6 @@ export default function Sidebar({ isOpen = true, onClose }: SidebarProps) {
         {/* Header */}
         <div className="flex items-center justify-between h-16 px-4 border-b border-gray-200">
           <div className="flex items-center space-x-2">
-            <Store className="h-6 w-6 sm:h-8 sm:w-8 text-blue-600" />
             <span className="text-lg sm:text-xl font-bold text-gray-900">
               <span className="hidden sm:inline">Job Importor</span>
               {/* <span className="sm:hidden"></span> */}
