@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useEffect, useCallback, SetStateAction } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Input } from '@/components/ui/input';
@@ -9,7 +9,8 @@ import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@
 import { Search, Briefcase, MapPin, DollarSign, Calendar, Tag } from 'lucide-react'; // Changed icons
 import DashboardLayout from '@/components/layout/DashboardLayout';
 
-const debounce = (func:any, delay:number) => {
+// --- Helper for Debouncing ---
+const debounce = (func: Function, delay: number) => {
   let timeout: NodeJS.Timeout;
   return function executed(...args: any[]) {
     const later = () => {
@@ -21,8 +22,93 @@ const debounce = (func:any, delay:number) => {
   };
 };
 
-
-
+// --- Mock Job Data (replace with API call in real app) ---
+const jobs = [
+  {
+    id: 'JOB-001',
+    title: 'Frontend Developer',
+    company: 'Tech Solutions Inc.',
+    location: 'Bengaluru, India',
+    type: 'full-time',
+    category: 'Software Development',
+    salary: '₹12 LPA - ₹18 LPA',
+    postedDate: '2025-07-10',
+    experience: '2-4 Years',
+    description: 'Develop and maintain web applications using React, Next.js, and TypeScript.'
+  },
+  {
+    id: 'JOB-002',
+    title: 'Marketing Specialist',
+    company: 'Global Brands Ltd.',
+    location: 'Mumbai, India',
+    type: 'full-time',
+    category: 'Marketing',
+    salary: '₹8 LPA - ₹12 LPA',
+    postedDate: '2025-07-08',
+    experience: '1-3 Years',
+    description: 'Execute digital marketing campaigns and analyze performance.'
+  },
+  {
+    id: 'JOB-003',
+    title: 'UI/UX Designer',
+    company: 'Creative Studio',
+    location: 'Remote',
+    type: 'part-time',
+    category: 'Design',
+    salary: '₹50,000 - ₹70,000 / month',
+    postedDate: '2025-07-12',
+    experience: '3-5 Years',
+    description: 'Design intuitive and aesthetically pleasing user interfaces.'
+  },
+  {
+    id: 'JOB-004',
+    title: 'Data Scientist',
+    company: 'Innovate AI',
+    location: 'Hyderabad, India',
+    type: 'full-time',
+    category: 'Data Science',
+    salary: '₹15 LPA - ₹25 LPA',
+    postedDate: '2025-07-05',
+    experience: '4-7 Years',
+    description: 'Build and deploy machine learning models for data analysis.'
+  },
+  {
+    id: 'JOB-005',
+    title: 'Customer Support Executive',
+    company: 'Service First',
+    location: 'Pune, India',
+    type: 'contract',
+    category: 'Customer Service',
+    salary: '₹4 LPA - ₹6 LPA',
+    postedDate: '2025-07-14',
+    experience: '0-2 Years',
+    description: 'Provide excellent customer support via phone and email.'
+  },
+  {
+    id: 'JOB-006',
+    title: 'Backend Engineer (Node.js)',
+    company: 'API Masters',
+    location: 'Bengaluru, India',
+    type: 'full-time',
+    category: 'Software Development',
+    salary: '₹10 LPA - ₹16 LPA',
+    postedDate: '2025-07-11',
+    experience: '2-5 Years',
+    description: 'Develop robust and scalable backend services with Node.js and Express.'
+  },
+  {
+    id: 'JOB-007',
+    title: 'Technical Writer',
+    company: 'DocuWrite Solutions',
+    location: 'Remote',
+    type: 'part-time',
+    category: 'Content Writing',
+    salary: '₹30,000 - ₹50,000 / month',
+    postedDate: '2025-07-09',
+    experience: '1-3 Years',
+    description: 'Create clear and concise technical documentation for software products.'
+  }
+];
 
 // --- Status/Type/Category Badges and Icons (adjust as needed) ---
 const jobTypeColors = {
@@ -53,7 +139,7 @@ export default function JobSearchPage() {
 
   // Debounce the setSearchTerm function
   const debouncedSetSearchTerm = useCallback(
-    debounce((value: SetStateAction<string>) => {
+    debounce((value: string) => {
       setDebouncedSearchTerm(value);
     }, 500), // 500ms debounce delay
     []
