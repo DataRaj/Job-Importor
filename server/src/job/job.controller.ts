@@ -7,7 +7,7 @@ import {
 } from './dto/import-log.dto';
 import { ErrorHandler, LOG_MESSAGES } from '../common';
 
-@Controller('import-logs')
+@Controller('api')
 export class JobController {
   private readonly logger = new Logger(JobController.name);
   constructor(
