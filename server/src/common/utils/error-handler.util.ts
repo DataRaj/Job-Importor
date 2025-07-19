@@ -5,7 +5,7 @@ import {
   UnexpectedException,
   ImportProcessException,
   PaginationException,
-} from '../exceptions/custom-exceptions';
+} from '../exceptions/exceptions';
 
 export class ErrorHandler {
   private static readonly logger = new Logger(ErrorHandler.name);

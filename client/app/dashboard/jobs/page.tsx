@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useEffect, useCallback } from 'react';
+import { useState, useEffect, useCallback, SetStateAction } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Input } from '@/components/ui/input';
@@ -9,10 +9,9 @@ import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@
 import { Search, Briefcase, MapPin, DollarSign, Calendar, Tag } from 'lucide-react'; // Changed icons
 import DashboardLayout from '@/components/layout/DashboardLayout';
 
-// --- Helper for Debouncing ---
-const debounce = (func, delay) => {
-  let timeout;
-  return function executed(...args) {
+const debounce = (func:any, delay:number) => {
+  let timeout: NodeJS.Timeout;
+  return function executed(...args: any[]) {
     const later = () => {
       clearTimeout(timeout);
       func(...args);
@@ -139,7 +138,7 @@ export default function JobSearchPage() {
 
   // Debounce the setSearchTerm function
   const debouncedSetSearchTerm = useCallback(
-    debounce((value) => {
+    debounce((value: SetStateAction<string>) => {
       setDebouncedSearchTerm(value);
     }, 500), // 500ms debounce delay
     []

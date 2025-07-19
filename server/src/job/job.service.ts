@@ -128,4 +128,16 @@ export class JobService {
       ErrorHandler.handleDatabaseError(error, 'getImportLogs');
     }
   }
+  async removeAllJobs() {
+    try {
+      this.logger.log('Removing all jobs from the queue');
+      const result = await this.logModel.deleteMany({});
+      await this.jobQueue.drain();
+      this.logger.log(`All jobs removed successfully: ${result.deletedCount} jobs deleted`);
+    } catch (error) {
+      this.logger.error(`Error removing jobs: ${error.message}`);
+      ErrorHandler.handleServiceError(error, 'removeAllJobs');
+      
+    }
+  } 
 }

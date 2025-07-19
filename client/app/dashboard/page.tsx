@@ -1,30 +1,32 @@
-// src/app/import-logs/page.tsx (or wherever your OrdersPage was located)
 'use client';
 
 import { useState, useEffect, useCallback } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Input } from '@/components/ui/input';
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
-import { Search, Loader2, Database, Clock, Zap, CheckCircle, XCircle } from 'lucide-react'; // Added icons
-import DashboardLayout from '@/components/layout/DashboardLayout'; // Assuming this path
-import { getImportLogs } from '@/lib/api'; // Adjust path
-import { ImportLog, Pagination } from '@/types/api'; // Adjust path
-import TriggerImportButton from '@/components/triggerImportJobs'; // Adjust path
-import { Button } from '@/components/ui/button'; // For pagination buttons
-
+import { Search, Loader2, Database, Clock, Zap, CheckCircle, XCircle, Play, RotateCw } from 'lucide-react'
+import DashboardLayout from '@/components/layout/DashboardLayout';
+import { getImportLogs, triggerImport } from '@/lib/api';
+import { ImportLog, Pagination } from '@/types/api';
+import { Button } from '@/components/ui/button';
+// import { useToast } from '@/hooks/useToast';
+import { useDebounce } from 'use-debounce';
+import { toast } from 'sonner'; // Assuming you have a toast component
 export default function ImportLogsPage() {
+  const [isTriggering, setIsTriggering] = useState(false); 
+  // const { toast } = useToast();
   const [logs, setLogs] = useState<ImportLog[]>([]);
   const [pagination, setPagination] = useState<Pagination>({ page: 1, limit: 10, total: 0, totalPages: 0 });
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
-  const [searchTerm, setSearchTerm] = useState(''); // Maps to feedUrl filter
+
+  const [searchTerm, setSearchTerm] = useState('');
+  const [debouncedSearchTerm] = useDebounce(searchTerm, 500); 
+
   const [currentPage, setCurrentPage] = useState(1);
   const [currentLimit, setCurrentLimit] = useState(10);
 
-
-  // Function to fetch logs from API
   const fetchLogs = useCallback(async () => {
     setLoading(true);
     setError(null);
@@ -32,7 +34,7 @@ export default function ImportLogsPage() {
       const response = await getImportLogs({
         page: currentPage,
         limit: currentLimit,
-        feedUrl: searchTerm || undefined, // Only pass if searchTerm is not empty
+        feedUrl: debouncedSearchTerm || undefined, 
       });
       setLogs(response.data);
       setPagination(response.pagination);
@@ -42,14 +44,39 @@ export default function ImportLogsPage() {
     } finally {
       setLoading(false);
     }
-  }, [currentPage, currentLimit, searchTerm]); // Dependencies for useCallback
+  }, [currentPage, currentLimit, debouncedSearchTerm]); 
 
-  // Fetch logs on component mount and when filters/pagination change
+  const handleTrigger = async () => {
+    setIsTriggering(true);
+    try {
+      const response = await triggerImport();
+      toast.success("Jobs Imported successfully!", {
+        description: response.message,
+        icon: '✅',
+        position: 'top-right',
+        richColors: true,
+        duration: 3000,
+      });
+      await fetchLogs(); 
+    } catch (error: any) {
+      console.error('Failed to trigger import:', error);
+      toast.error("Import Failed", {
+        description: error.response?.data?.message || 'An unexpected error occurred.',
+        duration: 5000,
+      });
+    } finally {
+      setIsTriggering(false);
+    }
+  };
+
   useEffect(() => {
     fetchLogs();
   }, [fetchLogs]);
 
-  // Derive stats from the fetched logs
+  useEffect(() => {
+    setCurrentPage(1);
+  }, [debouncedSearchTerm]);
+
   const getLogStats = () => {
     const totalFetched = logs.reduce((sum, log) => sum + log.totalFetched, 0);
     const newJobs = logs.reduce((sum, log) => sum + log.newJobs, 0);
@@ -70,7 +97,6 @@ export default function ImportLogsPage() {
     }
     return { className: 'bg-gray-100 text-gray-800', text: 'No Data', Icon: Clock }; // Or a relevant default
   };
-
 
   return (
     <DashboardLayout>
@@ -139,8 +165,27 @@ export default function ImportLogsPage() {
                   className="pl-10"
                 />
               </div>
-              <div className="w-full sm:w-auto">
-                <TriggerImportButton />
+              <div className="flex space-x-2 w-full sm:w-auto">
+                 <Button onClick={handleTrigger} disabled={isTriggering} className="w-full sm:w-auto">
+                  {isTriggering ? (
+                    <>
+                      <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                      Triggering...
+                    </>
+                  ) : (
+                    <>
+                      <Play className="mr-2 h-4 w-4" />
+                      Trigger New Import
+                    </>
+                  )}
+                 </Button>
+                 <Button onClick={fetchLogs} disabled={loading} variant="outline" size="icon">
+                   {loading ? (
+                     <Loader2 className="h-4 w-4 animate-spin" />
+                   ) : (
+                     <RotateCw className="h-4 w-4" />
+                   )}
+                 </Button>
               </div>
             </div>
           </CardHeader>
@@ -173,7 +218,7 @@ export default function ImportLogsPage() {
                       const { className, text, Icon } = getLogStatusBadge(log);
                       return (
                         <TableRow key={log._id}>
-                          <TableCell className="font-medium max-w-xs truncate">{log.feedUrl}</TableCell>
+                          <TableCell className="font-medium max-w-xs truncate" title={log.feedUrl}>{log.feedUrl}</TableCell>
                           <TableCell className="text-sm">{new Date(log.timestamp).toLocaleString()}</TableCell>
                           <TableCell>{log.totalFetched}</TableCell>
                           <TableCell>{log.newJobs}</TableCell>
@@ -190,7 +235,6 @@ export default function ImportLogsPage() {
                     })}
                   </TableBody>
                 </Table>
-                {/* Pagination Controls */}
                 <div className="flex justify-end items-center space-x-2 mt-4">
                   <span className="text-sm text-gray-700">
                     Page {pagination.page} of {pagination.totalPages} ({pagination.total} total logs)

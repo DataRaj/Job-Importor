@@ -1,5 +1,5 @@
 import { HttpException, HttpStatus } from '@nestjs/common';
-import { ERROR_MESSAGES } from '../constants/error-messages';
+import { ERROR_MESSAGES } from '../logs/error-output';
 
 export class DatabaseConnectionException extends HttpException {
   constructor(message?: string) {

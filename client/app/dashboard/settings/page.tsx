@@ -27,25 +27,7 @@ export default function SettingsPage() {
                   <span>General Settings</span>
                 </CardTitle>
               </CardHeader>
-              <CardContent className="space-y-4">
-                <div className="space-y-2">
-                  <Label htmlFor="storeName">Store Name</Label>
-                  <Input id="storeName" defaultValue="QuickCommerce" />
-                </div>
-                <div className="space-y-2">
-                  <Label htmlFor="storeEmail">Store Email</Label>
-                  <Input id="storeEmail" type="email" defaultValue="admin@quickcommerce.com" />
-                </div>
-                <div className="space-y-2">
-                  <Label htmlFor="storePhone">Store Phone</Label>
-                  <Input id="storePhone" defaultValue="+91 9876543210" />
-                </div>
-                <div className="space-y-2">
-                  <Label htmlFor="storeAddress">Store Address</Label>
-                  <Input id="storeAddress" defaultValue="123 Main Street, Mumbai, India" />
-                </div>
-                <Button>Save Changes</Button>
-              </CardContent>
+
             </Card>
 
             <Card>

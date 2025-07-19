@@ -10,7 +10,6 @@ import { ErrorHandler, LOG_MESSAGES } from '../common';
 @Controller('import-logs')
 export class JobController {
   private readonly logger = new Logger(JobController.name);
-
   constructor(
     private jobService: JobService,
   ) {}
@@ -54,6 +53,21 @@ export class JobController {
       };
     } catch (error) {
       ErrorHandler.handleImportError(error);
+    }
+  }
+
+  @Post('remove-all-jobs')
+  async removeAllJobs(): Promise<{ success: boolean; message: string }> {
+    try {
+      // this.logger.log(LOG_MESSAGES.JOB_CONTROLLER.REMOVING_ALL_JOBS);
+      await this.jobService.removeAllJobs();
+      // this.logger.log(LOG_MESSAGES.JOB_CONTROLLER.ALL_JOBS_REMOVED_SUCCESS);
+      return {
+        success: true,
+        message: LOG_MESSAGES.JOB_CONTROLLER.ALL_JOBS_REMOVED_SUCCESS,
+      };
+    } catch (error) {
+      ErrorHandler.handleServiceError(error, 'removeAllJobs');
     }
   }
 }
