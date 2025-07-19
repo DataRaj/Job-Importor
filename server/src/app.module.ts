@@ -19,7 +19,7 @@ import { RedisModule } from './redis/redis.module';
       imports: [ConfigModule],
       inject: [ConfigService],
       useFactory: async (configService: ConfigService) => ({
-        uri: configService.get<string>('MONGO_URI'),
+        uri: process.env.MONGO_URI || configService.get<string>('MONGO_URI'),
       }),
     }),
     AuthModule,
