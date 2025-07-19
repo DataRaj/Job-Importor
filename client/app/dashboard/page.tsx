@@ -1,181 +1,222 @@
-"use client";
-;
-import DashboardLayout from "@/components/layout/DashboardLayout";
+// src/app/import-logs/page.tsx (or wherever your OrdersPage was located)
+'use client';
+
+import { useState, useEffect, useCallback } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
-import { Avatar, AvatarFallback } from '@/components/ui/avatar';
+import { Input } from '@/components/ui/input';
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
-import { Phone, MapPin, Store } from 'lucide-react';
+import { Search, Loader2, Database, Clock, Zap, CheckCircle, XCircle } from 'lucide-react'; // Added icons
+import DashboardLayout from '@/components/layout/DashboardLayout'; // Assuming this path
+import { getImportLogs } from '@/lib/api'; // Adjust path
+import { ImportLog, Pagination } from '@/types/api'; // Adjust path
+import TriggerImportButton from '@/components/triggerImportJobs'; // Adjust path
+import { Button } from '@/components/ui/button'; // For pagination buttons
 
-const jobs = [
-  {
-    id: 1,
-    name: 'Rajesh Kumar',
-    shopName: 'Kumar General Store',
-    phone: '+91 9876543210',
-    city: 'Mumbai',
-    status: 'active',
-    joinDate: '2024-01-15',
-    totalOrders: 145
-  },
-  {
-    id: 2,
-    name: 'Priya Sharma',
-    shopName: 'Fresh Mart',
-    phone: '+91 9876543211',
-    city: 'Delhi',
-    status: 'active',
-    joinDate: '2024-02-20',
-    totalOrders: 89
-  },
-  {
-    id: 3,
-    name: 'Amit Patel',
-    shopName: 'Patel Grocery',
-    phone: '+91 9876543212',
-    city: 'Ahmedabad',
-    status: 'inactive',
-    joinDate: '2024-01-10',
-    totalOrders: 67
-  },
-  {
-    id: 4,
-    name: 'Sunita Devi',
-    shopName: 'Devi Store',
-    phone: '+91 9876543213',
-    city: 'Kolkata',
-    status: 'active',
-    joinDate: '2024-03-05',
-    totalOrders: 112
-  },
-  {
-    id: 5,
-    name: 'Mohammed Ali',
-    shopName: 'Ali Super Market',
-    phone: '+91 9876543214',
-    city: 'Hyderabad',
-    status: 'active',
-    joinDate: '2024-02-28',
-    totalOrders: 98
-  }
-];
-export default function DashboardPage() {
+export default function ImportLogsPage() {
+  const [logs, setLogs] = useState<ImportLog[]>([]);
+  const [pagination, setPagination] = useState<Pagination>({ page: 1, limit: 10, total: 0, totalPages: 0 });
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
+  const [searchTerm, setSearchTerm] = useState(''); // Maps to feedUrl filter
+  const [currentPage, setCurrentPage] = useState(1);
+  const [currentLimit, setCurrentLimit] = useState(10);
+
+
+  // Function to fetch logs from API
+  const fetchLogs = useCallback(async () => {
+    setLoading(true);
+    setError(null);
+    try {
+      const response = await getImportLogs({
+        page: currentPage,
+        limit: currentLimit,
+        feedUrl: searchTerm || undefined, // Only pass if searchTerm is not empty
+      });
+      setLogs(response.data);
+      setPagination(response.pagination);
+    } catch (err: any) {
+      console.error('Failed to fetch import logs:', err);
+      setError(err.message || 'Failed to load import logs.');
+    } finally {
+      setLoading(false);
+    }
+  }, [currentPage, currentLimit, searchTerm]); // Dependencies for useCallback
+
+  // Fetch logs on component mount and when filters/pagination change
+  useEffect(() => {
+    fetchLogs();
+  }, [fetchLogs]);
+
+  // Derive stats from the fetched logs
+  const getLogStats = () => {
+    const totalFetched = logs.reduce((sum, log) => sum + log.totalFetched, 0);
+    const newJobs = logs.reduce((sum, log) => sum + log.newJobs, 0);
+    const updatedJobs = logs.reduce((sum, log) => sum + log.updatedJobs, 0);
+    const failedJobs = logs.reduce((sum, log) => sum + log.failedJobs.length, 0);
+    return { totalFetched, newJobs, updatedJobs, failedJobs };
+  };
+
+  const stats = getLogStats();
+
+  const getLogStatusBadge = (log: ImportLog) => {
+    if (log.failedJobs && log.failedJobs.length > 0) {
+      return { className: 'bg-red-100 text-red-800', text: 'Failed Jobs', Icon: XCircle };
+    } else if (log.totalFetched > 0 && log.newJobs === log.totalFetched && log.updatedJobs === 0) {
+      return { className: 'bg-green-100 text-green-800', text: 'All New', Icon: CheckCircle };
+    } else if (log.totalFetched > 0 && (log.newJobs > 0 || log.updatedJobs > 0)) {
+      return { className: 'bg-blue-100 text-blue-800', text: 'Processed', Icon: CheckCircle };
+    }
+    return { className: 'bg-gray-100 text-gray-800', text: 'No Data', Icon: Clock }; // Or a relevant default
+  };
+
+
   return (
-          <DashboardLayout>
-            <div className="space-y-6">
-              <div>
-                <h1 className="text-3xl font-bold text-gray-900">Jobs Importor</h1>
-                <p className="text-gray-600 mt-2">Manage your jobs</p>
+    <DashboardLayout>
+      <div className="space-y-6">
+        <div>
+          <h1 className="text-3xl font-bold text-gray-900">Job Import Logs</h1>
+          <p className="text-gray-600 mt-2">Track and manage automated job import processes.</p>
+        </div>
+
+        <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
+          <Card>
+            <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+              <CardTitle className="text-sm font-medium">Total Fetched Jobs (across logs)</CardTitle>
+              <Database className="h-4 w-4 text-muted-foreground" />
+            </CardHeader>
+            <CardContent>
+              <div className="text-2xl font-bold">{stats.totalFetched}</div>
+              <p className="text-xs text-muted-foreground">Cumulative count from all logs</p>
+            </CardContent>
+          </Card>
+
+          <Card>
+            <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+              <CardTitle className="text-sm font-medium">New Jobs Added</CardTitle>
+              <Zap className="h-4 w-4 text-green-600" />
+            </CardHeader>
+            <CardContent>
+              <div className="text-2xl font-bold">{stats.newJobs}</div>
+              <p className="text-xs text-muted-foreground">Newly created entries</p>
+            </CardContent>
+          </Card>
+
+          <Card>
+            <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+              <CardTitle className="text-sm font-medium">Jobs Updated</CardTitle>
+              <CheckCircle className="h-4 w-4 text-blue-600" />
+            </CardHeader>
+            <CardContent>
+              <div className="text-2xl font-bold">{stats.updatedJobs}</div>
+              <p className="text-xs text-muted-foreground">Existing entries updated</p>
+            </CardContent>
+          </Card>
+
+          <Card>
+            <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+              <CardTitle className="text-sm font-medium">Failed Job Imports</CardTitle>
+              <XCircle className="h-4 w-4 text-red-600" />
+            </CardHeader>
+            <CardContent>
+              <div className="text-2xl font-bold">{stats.failedJobs}</div>
+              <p className="text-xs text-muted-foreground">Jobs that encountered errors</p>
+            </CardContent>
+          </Card>
+        </div>
+
+        <Card>
+          <CardHeader>
+            <CardTitle>Import Log Entries</CardTitle>
+            <div className="flex flex-col sm:flex-row items-start sm:items-center space-y-2 sm:space-y-0 sm:space-x-2 justify-between">
+              <div className="relative flex-1 max-w-lg w-full">
+                <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-gray-400" />
+                <Input
+                  placeholder="Filter by feed URL..."
+                  value={searchTerm}
+                  onChange={(e) => setSearchTerm(e.target.value)}
+                  className="pl-10"
+                />
               </div>
-      
-              <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-                <Card>
-                  <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-                    <CardTitle className="text-sm font-medium">Total jobs</CardTitle>
-                    <Store className="h-4 w-4 text-muted-foreground" />
-                  </CardHeader>
-                  <CardContent>
-                    <div className="text-2xl font-bold">{jobs.length}</div>
-                    <p className="text-xs text-muted-foreground">+2 from last month</p>
-                  </CardContent>
-                </Card>
-                
-                <Card>
-                  <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-                    <CardTitle className="text-sm font-medium">Active jobs</CardTitle>
-                    <Store className="h-4 w-4 text-muted-foreground" />
-                  </CardHeader>
-                  <CardContent>
-                    <div className="text-2xl font-bold">
-                      {jobs.filter(s => s.status === 'active').length}
-                    </div>
-                    <p className="text-xs text-muted-foreground">80% active rate</p>
-                  </CardContent>
-                </Card>
-                
-                <Card>
-                  <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-                    <CardTitle className="text-sm font-medium">Total Orders</CardTitle>
-                    <Store className="h-4 w-4 text-muted-foreground" />
-                  </CardHeader>
-                  <CardContent>
-                    <div className="text-2xl font-bold">
-                      {jobs.reduce((sum, s) => sum + s.totalOrders, 0)}
-                    </div>
-                    <p className="text-xs text-muted-foreground">+12% from last month</p>
-                  </CardContent>
-                </Card>
+              <div className="w-full sm:w-auto">
+                <TriggerImportButton />
               </div>
-      
-              <Card>
-                <CardHeader>
-                  <CardTitle>All Shopkeepers</CardTitle>
-                </CardHeader>
-                <CardContent>
-                  <Table>
-                    <TableHeader>
-                      <TableRow>
-                        <TableHead>Shopkeeper</TableHead>
-                        <TableHead>Shop Name</TableHead>
-                        <TableHead>Contact</TableHead>
-                        <TableHead>Location</TableHead>
-                        <TableHead>Orders</TableHead>
-                        <TableHead>Status</TableHead>
-                      </TableRow>
-                    </TableHeader>
-                    <TableBody>
-                      {jobs.map((job) => (
-                        <TableRow key={job.id}>
+            </div>
+          </CardHeader>
+          <CardContent>
+            {loading ? (
+              <div className="flex justify-center items-center h-48">
+                <Loader2 className="h-8 w-8 animate-spin text-gray-500" />
+                <span className="ml-2 text-gray-500">Loading logs...</span>
+              </div>
+            ) : error ? (
+              <div className="text-center text-red-500 p-4">Error: {error}</div>
+            ) : logs.length === 0 ? (
+              <div className="text-center text-gray-500 p-4">No import logs found. Trigger an import!</div>
+            ) : (
+              <>
+                <Table>
+                  <TableHeader>
+                    <TableRow>
+                      <TableHead>Feed URL</TableHead>
+                      <TableHead>Timestamp</TableHead>
+                      <TableHead>Fetched</TableHead>
+                      <TableHead>New</TableHead>
+                      <TableHead>Updated</TableHead>
+                      <TableHead>Failed</TableHead>
+                      <TableHead>Status</TableHead>
+                    </TableRow>
+                  </TableHeader>
+                  <TableBody>
+                    {logs.map((log) => {
+                      const { className, text, Icon } = getLogStatusBadge(log);
+                      return (
+                        <TableRow key={log._id}>
+                          <TableCell className="font-medium max-w-xs truncate">{log.feedUrl}</TableCell>
+                          <TableCell className="text-sm">{new Date(log.timestamp).toLocaleString()}</TableCell>
+                          <TableCell>{log.totalFetched}</TableCell>
+                          <TableCell>{log.newJobs}</TableCell>
+                          <TableCell>{log.updatedJobs}</TableCell>
+                          <TableCell>{log.failedJobs?.length || 0}</TableCell>
                           <TableCell>
-                            <div className="flex items-center space-x-3">
-                              <Avatar className="h-10 w-10">
-                                <AvatarFallback className="bg-blue-100 text-blue-600">
-                                  {job.name.split(' ').map(n => n[0]).join('')}
-                                </AvatarFallback>
-                              </Avatar>
-                              <div>
-                                <p className="font-medium">{job.name}</p>
-                                <p className="text-sm text-gray-600">
-                                  Joined {new Date(job.joinDate).toLocaleDateString()}
-                                </p>
-                              </div>
-                            </div>
-                          </TableCell>
-                          <TableCell>
-                            <div className="flex items-center space-x-2">
-                              <Store className="h-4 w-4 text-gray-400" />
-                              <span>{job.shopName}</span>
-                            </div>
-                          </TableCell>
-                          <TableCell>
-                            <div className="flex items-center space-x-2">
-                              <Phone className="h-4 w-4 text-gray-400" />
-                              <span>{job.phone}</span>
-                            </div>
-                          </TableCell>
-                          <TableCell>
-                            <div className="flex items-center space-x-2">
-                              <MapPin className="h-4 w-4 text-gray-400" />
-                              <span>{job.city}</span>
-                            </div>
-                          </TableCell>
-                          <TableCell>
-                            <span className="font-medium">{job.totalOrders}</span>
-                          </TableCell>
-                          <TableCell>
-                            <Badge variant={job.status === 'active' ? 'default' : 'secondary'}>
-                              {job.status}
+                            <Badge variant="secondary" className={className}>
+                              <Icon className="h-3 w-3 mr-1" />
+                              {text}
                             </Badge>
                           </TableCell>
                         </TableRow>
-                      ))}
-                    </TableBody>
-                  </Table>
-                </CardContent>
-              </Card>
-            </div>
-          </DashboardLayout>
-
-
+                      );
+                    })}
+                  </TableBody>
+                </Table>
+                {/* Pagination Controls */}
+                <div className="flex justify-end items-center space-x-2 mt-4">
+                  <span className="text-sm text-gray-700">
+                    Page {pagination.page} of {pagination.totalPages} ({pagination.total} total logs)
+                  </span>
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    onClick={() => setCurrentPage(prev => Math.max(1, prev - 1))}
+                    disabled={currentPage === 1}
+                  >
+                    Previous
+                  </Button>
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    onClick={() => setCurrentPage(prev => Math.min(pagination.totalPages, prev + 1))}
+                    disabled={currentPage === pagination.totalPages}
+                  >
+                    Next
+                  </Button>
+                </div>
+              </>
+            )}
+          </CardContent>
+        </Card>
+      </div>
+    </DashboardLayout>
   );
 }

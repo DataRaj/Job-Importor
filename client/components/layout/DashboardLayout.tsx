@@ -1,5 +1,4 @@
 'use client';
-
 import { useState } from 'react';
 import { useRouter } from 'next/navigation';
 import { useAuthStore } from '@/lib/store';
@@ -10,12 +9,10 @@ interface DashboardLayoutProps {
   children: React.ReactNode;
 }
 
-
 export default function DashboardLayout({ children }: DashboardLayoutProps) {
   const { isAuthenticated } = useAuthStore();
   const router = useRouter();
   const [sidebarOpen, setSidebarOpen] = useState(false);
-
 
   const closeSidebar = () => {
     setSidebarOpen(false);

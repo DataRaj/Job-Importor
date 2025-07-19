@@ -1,281 +1,342 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Input } from '@/components/ui/input';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
-import { Search, Filter, ShoppingCart, Clock, CheckCircle, XCircle } from 'lucide-react';
+import { Search, Briefcase, MapPin, DollarSign, Calendar, Tag } from 'lucide-react'; // Changed icons
 import DashboardLayout from '@/components/layout/DashboardLayout';
 
-const orders = [
+// --- Helper for Debouncing ---
+const debounce = (func, delay) => {
+  let timeout;
+  return function executed(...args) {
+    const later = () => {
+      clearTimeout(timeout);
+      func(...args);
+    };
+    clearTimeout(timeout);
+    timeout = setTimeout(later, delay);
+  };
+};
+
+// --- Mock Job Data (replace with API call in real app) ---
+const jobs = [
   {
-    id: 'ORD-001',
-    customerName: 'John Doe',
-    customerPhone: '+91 9876543210',
-    items: [
-      { name: 'Fresh Apples', quantity: 2, price: 299 },
-      { name: 'Organic Bananas', quantity: 1, price: 89 }
-    ],
-    totalAmount: 687,
-    status: 'delivered',
-    orderDate: '2024-01-15',
-    deliveryDate: '2024-01-16',
-    shopkeeper: 'Rajesh Kumar'
+    id: 'JOB-001',
+    title: 'Frontend Developer',
+    company: 'Tech Solutions Inc.',
+    location: 'Bengaluru, India',
+    type: 'full-time',
+    category: 'Software Development',
+    salary: '₹12 LPA - ₹18 LPA',
+    postedDate: '2025-07-10',
+    experience: '2-4 Years',
+    description: 'Develop and maintain web applications using React, Next.js, and TypeScript.'
   },
   {
-    id: 'ORD-002',
-    customerName: 'Jane Smith',
-    customerPhone: '+91 9876543211',
-    items: [
-      { name: 'Whole Wheat Bread', quantity: 2, price: 45 },
-      { name: 'Fresh Milk', quantity: 1, price: 55 }
-    ],
-    totalAmount: 145,
-    status: 'processing',
-    orderDate: '2024-01-16',
-    deliveryDate: null,
-    shopkeeper: 'Priya Sharma'
+    id: 'JOB-002',
+    title: 'Marketing Specialist',
+    company: 'Global Brands Ltd.',
+    location: 'Mumbai, India',
+    type: 'full-time',
+    category: 'Marketing',
+    salary: '₹8 LPA - ₹12 LPA',
+    postedDate: '2025-07-08',
+    experience: '1-3 Years',
+    description: 'Execute digital marketing campaigns and analyze performance.'
   },
   {
-    id: 'ORD-003',
-    customerName: 'Mike Johnson',
-    customerPhone: '+91 9876543212',
-    items: [
-      { name: 'Basmati Rice', quantity: 1, price: 120 }
-    ],
-    totalAmount: 120,
-    status: 'shipped',
-    orderDate: '2024-01-16',
-    deliveryDate: null,
-    shopkeeper: 'Amit Patel'
+    id: 'JOB-003',
+    title: 'UI/UX Designer',
+    company: 'Creative Studio',
+    location: 'Remote',
+    type: 'part-time',
+    category: 'Design',
+    salary: '₹50,000 - ₹70,000 / month',
+    postedDate: '2025-07-12',
+    experience: '3-5 Years',
+    description: 'Design intuitive and aesthetically pleasing user interfaces.'
   },
   {
-    id: 'ORD-004',
-    customerName: 'Sarah Wilson',
-    customerPhone: '+91 9876543213',
-    items: [
-      { name: 'Fresh Apples', quantity: 3, price: 299 },
-      { name: 'Organic Bananas', quantity: 2, price: 89 }
-    ],
-    totalAmount: 1075,
-    status: 'pending',
-    orderDate: '2024-01-17',
-    deliveryDate: null,
-    shopkeeper: 'Sunita Devi'
+    id: 'JOB-004',
+    title: 'Data Scientist',
+    company: 'Innovate AI',
+    location: 'Hyderabad, India',
+    type: 'full-time',
+    category: 'Data Science',
+    salary: '₹15 LPA - ₹25 LPA',
+    postedDate: '2025-07-05',
+    experience: '4-7 Years',
+    description: 'Build and deploy machine learning models for data analysis.'
   },
   {
-    id: 'ORD-005',
-    customerName: 'David Brown',
-    customerPhone: '+91 9876543214',
-    items: [
-      { name: 'Fresh Milk', quantity: 2, price: 55 },
-      { name: 'Whole Wheat Bread', quantity: 1, price: 45 }
-    ],
-    totalAmount: 155,
-    status: 'cancelled',
-    orderDate: '2024-01-17',
-    deliveryDate: null,
-    shopkeeper: 'Mohammed Ali'
+    id: 'JOB-005',
+    title: 'Customer Support Executive',
+    company: 'Service First',
+    location: 'Pune, India',
+    type: 'contract',
+    category: 'Customer Service',
+    salary: '₹4 LPA - ₹6 LPA',
+    postedDate: '2025-07-14',
+    experience: '0-2 Years',
+    description: 'Provide excellent customer support via phone and email.'
+  },
+  {
+    id: 'JOB-006',
+    title: 'Backend Engineer (Node.js)',
+    company: 'API Masters',
+    location: 'Bengaluru, India',
+    type: 'full-time',
+    category: 'Software Development',
+    salary: '₹10 LPA - ₹16 LPA',
+    postedDate: '2025-07-11',
+    experience: '2-5 Years',
+    description: 'Develop robust and scalable backend services with Node.js and Express.'
+  },
+  {
+    id: 'JOB-007',
+    title: 'Technical Writer',
+    company: 'DocuWrite Solutions',
+    location: 'Remote',
+    type: 'part-time',
+    category: 'Content Writing',
+    salary: '₹30,000 - ₹50,000 / month',
+    postedDate: '2025-07-09',
+    experience: '1-3 Years',
+    description: 'Create clear and concise technical documentation for software products.'
   }
 ];
 
-const statusColors = {
-  pending: 'bg-yellow-100 text-yellow-800',
-  processing: 'bg-blue-100 text-blue-800',
-  shipped: 'bg-purple-100 text-purple-800',
-  delivered: 'bg-green-100 text-green-800',
-  cancelled: 'bg-red-100 text-red-800'
+// --- Status/Type/Category Badges and Icons (adjust as needed) ---
+const jobTypeColors = {
+  'full-time': 'bg-blue-100 text-blue-800',
+  'part-time': 'bg-purple-100 text-purple-800',
+  'contract': 'bg-yellow-100 text-yellow-800',
+  'remote': 'bg-green-100 text-green-800'
 };
 
-const statusIcons = {
-  pending: Clock,
-  processing: ShoppingCart,
-  shipped: ShoppingCart,
-  delivered: CheckCircle,
-  cancelled: XCircle
+const jobCategoryColors = {
+  'Software Development': 'bg-indigo-100 text-indigo-800',
+  'Marketing': 'bg-pink-100 text-pink-800',
+  'Design': 'bg-orange-100 text-orange-800',
+  'Data Science': 'bg-teal-100 text-teal-800',
+  'Customer Service': 'bg-red-100 text-red-800',
+  'Content Writing': 'bg-lime-100 text-lime-800'
 };
 
-export default function OrdersPage() {
+
+export default function JobSearchPage() {
   const [searchTerm, setSearchTerm] = useState('');
-  const [statusFilter, setStatusFilter] = useState('all');
+  const [jobTypeFilter, setJobTypeFilter] = useState('all');
+  const [categoryFilter, setCategoryFilter] = useState('all');
+  const [filteredJobs, setFilteredJobs] = useState(jobs);
 
-  const filteredOrders = orders.filter(order => {
-    const matchesSearch = order.customerName.toLowerCase().includes(searchTerm.toLowerCase()) ||
-                         order.id.toLowerCase().includes(searchTerm.toLowerCase());
-    const matchesStatus = statusFilter === 'all' || order.status === statusFilter;
-    return matchesSearch && matchesStatus;
-  });
+  // Debounced search term state
+  const [debouncedSearchTerm, setDebouncedSearchTerm] = useState('');
 
-  const getStatusStats = () => {
+  // Debounce the setSearchTerm function
+  const debouncedSetSearchTerm = useCallback(
+    debounce((value) => {
+      setDebouncedSearchTerm(value);
+    }, 500), // 500ms debounce delay
+    []
+  );
+
+  useEffect(() => {
+    // This effect runs when debouncedSearchTerm, jobTypeFilter, or categoryFilter changes
+    const applyFilters = () => {
+      let tempJobs = jobs.filter(job => {
+        const matchesSearch = job.title.toLowerCase().includes(debouncedSearchTerm.toLowerCase()) ||
+                              job.company.toLowerCase().includes(debouncedSearchTerm.toLowerCase()) ||
+                              job.location.toLowerCase().includes(debouncedSearchTerm.toLowerCase());
+        const matchesType = jobTypeFilter === 'all' || job.type === jobTypeFilter;
+        const matchesCategory = categoryFilter === 'all' || job.category === categoryFilter;
+        return matchesSearch && matchesType && matchesCategory;
+      });
+      setFilteredJobs(tempJobs);
+    };
+
+    applyFilters();
+  }, [debouncedSearchTerm, jobTypeFilter, categoryFilter]);
+
+
+  const getJobStats = () => {
     return {
-      total: orders.length,
-      pending: orders.filter(o => o.status === 'pending').length,
-      processing: orders.filter(o => o.status === 'processing').length,
-      delivered: orders.filter(o => o.status === 'delivered').length,
-      cancelled: orders.filter(o => o.status === 'cancelled').length
+      total: jobs.length,
+      fullTime: jobs.filter(j => j.type === 'full-time').length,
+      partTime: jobs.filter(j => j.type === 'part-time').length,
+      remote: jobs.filter(j => j.location.toLowerCase() === 'remote').length,
+      contract: jobs.filter(j => j.type === 'contract').length
     };
   };
 
-  const stats = getStatusStats();
+  const stats = getJobStats();
 
   return (
     <DashboardLayout>
       <div className="space-y-6">
         <div>
-          <h1 className="text-3xl font-bold text-gray-900">Orders</h1>
-          <p className="text-gray-600 mt-2">Track and manage all customer orders</p>
+          <h1 className="text-3xl font-bold text-gray-900">Job Listings</h1>
+          <p className="text-gray-600 mt-2">Find your next career opportunity</p>
         </div>
 
-        <div className="grid grid-cols-1 md:grid-cols-5 gap-4">
+        {/* Job Stats Cards */}
+        <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
           <Card>
             <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-              <CardTitle className="text-sm font-medium">Total Orders</CardTitle>
-              <ShoppingCart className="h-4 w-4 text-muted-foreground" />
+              <CardTitle className="text-sm font-medium">Total Jobs</CardTitle>
+              <Briefcase className="h-4 w-4 text-muted-foreground" />
             </CardHeader>
             <CardContent>
               <div className="text-2xl font-bold">{stats.total}</div>
-              <p className="text-xs text-muted-foreground">+12% from last month</p>
+              <p className="text-xs text-muted-foreground">Available opportunities</p>
             </CardContent>
           </Card>
           
           <Card>
             <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-              <CardTitle className="text-sm font-medium">Pending</CardTitle>
-              <Clock className="h-4 w-4 text-yellow-600" />
+              <CardTitle className="text-sm font-medium">Full-time</CardTitle>
+              <Briefcase className="h-4 w-4 text-blue-600" />
             </CardHeader>
             <CardContent>
-              <div className="text-2xl font-bold">{stats.pending}</div>
-              <p className="text-xs text-muted-foreground">Awaiting confirmation</p>
+              <div className="text-2xl font-bold">{stats.fullTime}</div>
+              <p className="text-xs text-muted-foreground">Stable career paths</p>
             </CardContent>
           </Card>
           
           <Card>
             <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-              <CardTitle className="text-sm font-medium">Processing</CardTitle>
-              <ShoppingCart className="h-4 w-4 text-blue-600" />
+              <CardTitle className="text-sm font-medium">Part-time</CardTitle>
+              <Briefcase className="h-4 w-4 text-purple-600" />
             </CardHeader>
             <CardContent>
-              <div className="text-2xl font-bold">{stats.processing}</div>
-              <p className="text-xs text-muted-foreground">Being prepared</p>
+              <div className="text-2xl font-bold">{stats.partTime}</div>
+              <p className="text-xs text-muted-foreground">Flexible work options</p>
             </CardContent>
           </Card>
           
           <Card>
             <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-              <CardTitle className="text-sm font-medium">Delivered</CardTitle>
-              <CheckCircle className="h-4 w-4 text-green-600" />
+              <CardTitle className="text-sm font-medium">Remote Jobs</CardTitle>
+              <MapPin className="h-4 w-4 text-green-600" />
             </CardHeader>
             <CardContent>
-              <div className="text-2xl font-bold">{stats.delivered}</div>
-              <p className="text-xs text-muted-foreground">Successfully completed</p>
-            </CardContent>
-          </Card>
-          
-          <Card>
-            <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-              <CardTitle className="text-sm font-medium">Cancelled</CardTitle>
-              <XCircle className="h-4 w-4 text-red-600" />
-            </CardHeader>
-            <CardContent>
-              <div className="text-2xl font-bold">{stats.cancelled}</div>
-              <p className="text-xs text-muted-foreground">Cancelled orders</p>
+              <div className="text-2xl font-bold">{stats.remote}</div>
+              <p className="text-xs text-muted-foreground">Work from anywhere</p>
             </CardContent>
           </Card>
         </div>
 
+        {/* Search and Filter Section */}
         <Card>
           <CardHeader>
-            <CardTitle>All Orders</CardTitle>
-            <div className="flex items-center space-x-2">
-              <div className="relative flex-1 max-w-md">
+            <CardTitle>Browse Jobs</CardTitle>
+            <div className="flex flex-col md:flex-row items-center space-y-4 md:space-y-0 md:space-x-2">
+              <div className="relative flex-1 max-w-md w-full">
                 <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-gray-400" />
                 <Input
-                  placeholder="Search orders..."
+                  placeholder="Search by title, company, or location..."
                   value={searchTerm}
-                  onChange={(e) => setSearchTerm(e.target.value)}
+                  onChange={(e) => {
+                    setSearchTerm(e.target.value);
+                    debouncedSetSearchTerm(e.target.value);
+                  }}
                   className="pl-10"
                 />
               </div>
-              <Select value={statusFilter} onValueChange={setStatusFilter}>
-                <SelectTrigger className="w-[180px]">
-                  <SelectValue placeholder="Filter by status" />
+              <Select value={jobTypeFilter} onValueChange={setJobTypeFilter}>
+                <SelectTrigger className="w-full md:w-[180px]">
+                  <SelectValue placeholder="Filter by Type" />
                 </SelectTrigger>
                 <SelectContent>
-                  <SelectItem value="all">All Status</SelectItem>
-                  <SelectItem value="pending">Pending</SelectItem>
-                  <SelectItem value="processing">Processing</SelectItem>
-                  <SelectItem value="shipped">Shipped</SelectItem>
-                  <SelectItem value="delivered">Delivered</SelectItem>
-                  <SelectItem value="cancelled">Cancelled</SelectItem>
+                  <SelectItem value="all">All Types</SelectItem>
+                  <SelectItem value="full-time">Full-time</SelectItem>
+                  <SelectItem value="part-time">Part-time</SelectItem>
+                  <SelectItem value="contract">Contract</SelectItem>
+                  <SelectItem value="remote">Remote</SelectItem>
+                </SelectContent>
+              </Select>
+              <Select value={categoryFilter} onValueChange={setCategoryFilter}>
+                <SelectTrigger className="w-full md:w-[180px]">
+                  <SelectValue placeholder="Filter by Category" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="all">All Categories</SelectItem>
+                  <SelectItem value="Software Development">Software Development</SelectItem>
+                  <SelectItem value="Marketing">Marketing</SelectItem>
+                  <SelectItem value="Design">Design</SelectItem>
+                  <SelectItem value="Data Science">Data Science</SelectItem>
+                  <SelectItem value="Customer Service">Customer Service</SelectItem>
+                  <SelectItem value="Content Writing">Content Writing</SelectItem>
                 </SelectContent>
               </Select>
             </div>
           </CardHeader>
           <CardContent>
-            <Table>
-              <TableHeader>
-                <TableRow>
-                  <TableHead>Order ID</TableHead>
-                  <TableHead>Customer</TableHead>
-                  <TableHead>Items</TableHead>
-                  <TableHead>Total</TableHead>
-                  <TableHead>Status</TableHead>
-                  <TableHead>Date</TableHead>
-                  <TableHead>Shopkeeper</TableHead>
-                </TableRow>
-              </TableHeader>
-              <TableBody>
-                {filteredOrders.map((order) => {
-                  const StatusIcon = statusIcons[order.status as keyof typeof statusIcons];
-                  return (
-                    <TableRow key={order.id}>
-                      <TableCell className="font-medium">{order.id}</TableCell>
-                      <TableCell>
-                        <div>
-                          <p className="font-medium">{order.customerName}</p>
-                          <p className="text-sm text-gray-600">{order.customerPhone}</p>
-                        </div>
+            {filteredJobs.length === 0 ? (
+              <div className="text-center py-8 text-gray-500">
+                No jobs found matching your criteria.
+              </div>
+            ) : (
+              <Table>
+                <TableHeader>
+                  <TableRow>
+                    <TableHead>Job Title</TableHead>
+                    <TableHead>Company</TableHead>
+                    <TableHead>Location</TableHead>
+                    <TableHead>Type</TableHead>
+                    <TableHead>Category</TableHead>
+                    <TableHead>Salary</TableHead>
+                    <TableHead>Experience</TableHead>
+                    <TableHead>Posted Date</TableHead>
+                  </TableRow>
+                </TableHeader>
+                <TableBody>
+                  {filteredJobs.map((job) => (
+                    <TableRow key={job.id}>
+                      <TableCell className="font-medium">{job.title}</TableCell>
+                      <TableCell>{job.company}</TableCell>
+                      <TableCell className="flex items-center">
+                        <MapPin className="h-3 w-3 mr-1 text-gray-500" />
+                        {job.location}
                       </TableCell>
-                      <TableCell>
-                        <div className="space-y-1">
-                          {order.items.map((item, index) => (
-                            <div key={index} className="text-sm">
-                              <span className="font-medium">{item.name}</span>
-                              <span className="text-gray-600 ml-2">x{item.quantity}</span>
-                            </div>
-                          ))}
-                        </div>
-                      </TableCell>
-                      <TableCell className="font-medium">₹{order.totalAmount}</TableCell>
                       <TableCell>
                         <Badge 
                           variant="secondary" 
-                          className={statusColors[order.status as keyof typeof statusColors]}
+                          className={jobTypeColors[job.type as keyof typeof jobTypeColors]}
                         >
-                          <StatusIcon className="h-3 w-3 mr-1" />
-                          {order.status}
+                          {job.type}
                         </Badge>
                       </TableCell>
                       <TableCell>
-                        <div>
-                          <p className="text-sm">{new Date(order.orderDate).toLocaleDateString()}</p>
-                          {order.deliveryDate && (
-                            <p className="text-xs text-gray-600">
-                              Delivered: {new Date(order.deliveryDate).toLocaleDateString()}
-                            </p>
-                          )}
-                        </div>
+                        <Badge 
+                          variant="secondary" 
+                          className={jobCategoryColors[job.category as keyof typeof jobCategoryColors]}
+                        >
+                          {job.category}
+                        </Badge>
                       </TableCell>
                       <TableCell>
-                        <span className="text-sm">{order.shopkeeper}</span>
+                        <span className="flex items-center">
+                          <DollarSign className="h-3 w-3 mr-1 text-green-600" />
+                          {job.salary}
+                        </span>
+                      </TableCell>
+                      <TableCell>{job.experience}</TableCell>
+                      <TableCell>
+                        <span className="flex items-center text-sm text-gray-600">
+                          <Calendar className="h-3 w-3 mr-1" />
+                          {new Date(job.postedDate).toLocaleDateString()}
+                        </span>
                       </TableCell>
                     </TableRow>
-                  );
-                })}
-              </TableBody>
-            </Table>
+                  ))}
+                </TableBody>
+              </Table>
+            )}
           </CardContent>
         </Card>
       </div>

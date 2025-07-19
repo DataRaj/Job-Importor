@@ -1,35 +1,37 @@
 import axios from 'axios';
-import { Product } from './store';
+import {
+  GetImportLogsResponse,
+  GetImportLogsQuery,
+  TriggerImportResponse,
+} from '@/types/api'; 
 
-const API_BASE_URL = process.env.NODE_ENV === 'production' 
-  ? ' https://quick-ecom-server.onrender.com' 
-  : 'http://localhost:5000';
+const API_BASE_URL = 'http://localhost:4000/import-logs'; 
 
 const api = axios.create({
   baseURL: API_BASE_URL,
-  timeout: 10000,
+  headers: {
+    'Content-Type': 'application/json',
+  },
 });
 
-export const productAPI = {
-  getAll: async (search?: string) => {
-    const params = search ? { search } : {};
-    const response = await api.get('/api/products', { params });
+export const getImportLogs = async (
+  query?: GetImportLogsQuery,
+): Promise<GetImportLogsResponse> => {
+  try {
+    const response = await api.get('/getImportLogsData', { params: query });
     return response.data;
-  },
-  
-  create: async (product: Omit<Product, 'id'>) => {
-    const response = await api.post('/api/products', product);
-    return response.data;
-  },
-  
-  update: async (id: number, product: Partial<Product>) => {
-    const response = await api.put(`/api/products/${id}`, product);
-    return response.data;
-  },
-  
-  delete: async (id: number) => {
-    await api.delete(`/api/products/${id}`);
+  } catch (error) {
+    console.error('Error fetching import logs:', error);
+    throw error;
   }
 };
 
-export default api;
+export const triggerImport = async (): Promise<TriggerImportResponse> => {
+  try {
+    const response = await api.post('/trigger-importf');
+    return response.data;
+  } catch (error) {
+    console.error('Error triggering import:', error);
+    throw error;
+  }
+};
