@@ -14,7 +14,7 @@ A robust job import system that fetches job data from external APIs, processes t
 -   **Interactive Admin UI**: Built with Next.js (Shadcn UI, Tailwind CSS) for monitoring import history and job data.
 
 ## 🏗️ Architecture
-
+```
 +---------------------+       +---------------------------+       +---------------------+
 |  Next.js Frontend   |<----->|     Nest.js Backend       |<----->|  External Job APIs  |
 | (Admin Dashboard)   |       |    (API Server)           |       | (Job Feeds: RSS)    |
