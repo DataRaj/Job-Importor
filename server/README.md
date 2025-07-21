@@ -57,7 +57,7 @@ $ npm run test:cov
 ```
 
 screenshots: 
-![alt text](image.png)
+![Screen_1](image.png)
 
 
 ## Deployment

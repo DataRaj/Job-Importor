@@ -18,6 +18,10 @@ A robust job import system that fetches job data from external APIs, processes t
 
 ```
 
+screenshots: 
+
+![Screen_2](image.png)
+![alt text](image.png)
 ├── client/              # Next.js frontend application
 │   ├── src/
 │   │   ├── app/         # App Router pages (e.g., /import-logs, /jobs)
