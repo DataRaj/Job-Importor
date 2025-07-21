@@ -16,12 +16,13 @@ A robust job import system that fetches job data from external APIs, processes t
 ## 🏗️ Architecture
 ![System Architecture Diagram](docs/architecture.png)
 
-```
-
 screenshots: 
 
-![Screen_2](image.png)
-![alt text](image.png)
+![Screen_1](image_1.png)
+![Screen_2](image_2.png)
+```
+
+
 ├── client/              # Next.js frontend application
 │   ├── src/
 │   │   ├── app/         # App Router pages (e.g., /import-logs, /jobs)
