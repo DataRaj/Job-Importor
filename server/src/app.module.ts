@@ -33,9 +33,9 @@ import { BullModule } from '@nestjs/bull';
     MongooseModule.forRoot(process.env.MONGO_URI!),
     BullModule.forRoot({
       redis: {
-        host: process.env.REDIS_HOST || 'localhost',
-        port: parseInt(process.env.REDIS_PORT || '6379', 10),
-        password: process.env.REDIS_PASSWORD || undefined,
+        host: process.env.REDIS_HOST,
+        port: parseInt(process.env.REDIS_PORT!),
+        password: process.env.REDIS_PASSWORD!,
             },
     }),
     ScheduleModule.forRoot(),
