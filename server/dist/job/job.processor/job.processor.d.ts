@@ -1,11 +1,11 @@
-import { Job as BullJob } from 'bull';
+import { Job as BullQueueJob } from 'bull';
 import { Model } from 'mongoose';
-import { Job } from '../schemas/jobs.schema';
-import { ImportLog } from '../schemas/importor-log.schema';
-export declare class JobProcessor {
-    private jobModel;
-    private logModel;
-    private readonly logger;
-    constructor(jobModel: Model<Job>, logModel: Model<ImportLog>);
-    handleJobImport(job: BullJob): Promise<void>;
+import { Job as JobEntity } from '../schemas/jobs.schema';
+import { ImportLog as LogEntity } from '../schemas/importor-log.schema';
+export declare class JobImportWorker {
+    private readonly jobRepo;
+    private readonly logRepo;
+    private readonly log;
+    constructor(jobRepo: Model<JobEntity>, logRepo: Model<LogEntity>);
+    processImportTask(queueJob: BullQueueJob): Promise<void>;
 }

@@ -23,9 +23,9 @@ exports.AppModule = AppModule = __decorate([
             mongoose_1.MongooseModule.forRoot(process.env.MONGO_URI),
             bull_1.BullModule.forRoot({
                 redis: {
-                    host: process.env.REDIS_HOST || 'localhost',
-                    port: parseInt(process.env.REDIS_PORT || '6379', 10),
-                    password: process.env.REDIS_PASSWORD || undefined,
+                    host: process.env.REDIS_HOST,
+                    port: parseInt(process.env.REDIS_PORT),
+                    password: process.env.REDIS_PASSWORD,
                 },
             }),
             schedule_1.ScheduleModule.forRoot(),

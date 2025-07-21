@@ -88,7 +88,7 @@ __decorate([
     __metadata("design:returntype", Promise)
 ], JobController.prototype, "triggerImport", null);
 __decorate([
-    (0, common_1.Post)('remove-all-jobs'),
+    (0, common_1.Delete)('remove-all-jobs'),
     __metadata("design:type", Function),
     __metadata("design:paramtypes", []),
     __metadata("design:returntype", Promise)

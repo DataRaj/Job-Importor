@@ -27,7 +27,7 @@ exports.JobModule = JobModule = __decorate([
                 { name: importor_log_schema_1.ImportLog.name, schema: importor_log_schema_1.ImportLogSchema },
             ]),
         ],
-        providers: [job_service_1.JobService, job_processor_1.JobProcessor],
+        providers: [job_service_1.JobService, job_processor_1.JobImportWorker],
         controllers: [job_controller_1.JobController],
     })
 ], JobModule);
