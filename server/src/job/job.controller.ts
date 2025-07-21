@@ -1,4 +1,4 @@
-import { Controller, Get, Post, Query, HttpException, Logger } from '@nestjs/common';
+import { Controller, Get, Post, Query, HttpException, Logger, Delete } from '@nestjs/common';
 import { JobService } from './job.service';
 import { 
   ImportLogResponseDto, 
@@ -56,12 +56,10 @@ export class JobController {
     }
   }
 
-  @Post('remove-all-jobs')
+  @Delete('remove-all-jobs')
   async removeAllJobs(): Promise<{ success: boolean; message: string }> {
     try {
-      // this.logger.log(LOG_MESSAGES.JOB_CONTROLLER.REMOVING_ALL_JOBS);
       await this.jobService.removeAllJobs();
-      // this.logger.log(LOG_MESSAGES.JOB_CONTROLLER.ALL_JOBS_REMOVED_SUCCESS);
       return {
         success: true,
         message: LOG_MESSAGES.JOB_CONTROLLER.ALL_JOBS_REMOVED_SUCCESS,
@@ -70,4 +68,17 @@ export class JobController {
       ErrorHandler.handleServiceError(error, 'removeAllJobs');
     }
   }
+  
+  // @Get('import-jobs')
+  // async getImportJobs(): Promise<{ success: boolean; data: any[] }> {
+  //   try {
+  //     const jobs = await this.jobService.getImportJobs();
+  //     return {
+  //       success: true,
+  //       data: jobs,
+  //     };
+  //   } catch (error) {
+  //     ErrorHandler.handleServiceError(error, 'getImportJobs');
+  //   }
+  // }
 }

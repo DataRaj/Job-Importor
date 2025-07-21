@@ -1,82 +1,86 @@
 import { Process, Processor } from '@nestjs/bull';
 import { Logger } from '@nestjs/common';
-import { Job as BullJob } from 'bull';
+import { Job as BullQueueJob } from 'bull';
 import { InjectModel } from '@nestjs/mongoose';
 import { Model } from 'mongoose';
-import { Job } from '../schemas/jobs.schema';
-import { ImportLog } from '../schemas/importor-log.schema';
+import { Job as JobEntity } from '../schemas/jobs.schema';
+import { ImportLog as LogEntity } from '../schemas/importor-log.schema';
 import { ErrorHandler, LOG_MESSAGES } from '../../common';
 
 @Processor('job-import-queue')
-export class JobProcessor {
-  private readonly logger = new Logger(JobProcessor.name);
+export class JobImportWorker {
+  private readonly log = new Logger(JobImportWorker.name);
 
   constructor(
-    @InjectModel(Job.name) private jobModel: Model<Job>,
-    @InjectModel(ImportLog.name) private logModel: Model<ImportLog>,
+    @InjectModel(JobEntity.name) private readonly jobRepo: Model<JobEntity>,
+    @InjectModel(LogEntity.name) private readonly logRepo: Model<LogEntity>,
   ) {}
 
-  @Process({name: 'import', concurrency: parseInt(process.env.CONCURRENCY || '1', 10)})
-  async handleJobImport(job: BullJob) {
+  @Process({ name: 'import', concurrency: Number(process.env.CONCURRENCY ?? '1') })
+  async processImportTask(queueJob: BullQueueJob) {
     try {
-      this.logger.log(`${LOG_MESSAGES.JOB_PROCESSOR.PROCESSING_JOB_IMPORT} ${job.data.feedUrl}`);
-      
-      const { jobData, feedUrl } = job.data;
+      this.log.log(`${LOG_MESSAGES.JOB_PROCESSOR.PROCESSING_JOB_IMPORT} ${queueJob.data.feedUrl}`);
 
-      const parsedJob = {
-        guid: jobData.guid?.[0]?._ || jobData.guid?.[0],  
-        title: jobData.title?.[0] || '',
-        link: jobData.link?.[0] || '',
-        description: jobData.description?.[0] || '',
+      const { jobData, feedUrl } = queueJob.data;
+
+      // Extract job details
+      const jobDetails = {
+        guid: jobData.guid?.[0]?._ ?? jobData.guid?.[0],
+        title: jobData.title?.[0] ?? '',
+        link: jobData.link?.[0] ?? '',
+        description: jobData.description?.[0] ?? '',
       };
-      
-  
-      let log = await this.logModel.findOne({ feedUrl });
-      if (!log) {
-        this.logger.log(`${LOG_MESSAGES.JOB_PROCESSOR.CREATING_NEW_LOG} ${feedUrl}`);
-        log = new this.logModel({
+
+      // Retrieve or create log entry
+      let importLog = await this.logRepo.findOne({ feedUrl });
+      if (!importLog) {
+        this.log.log(`${LOG_MESSAGES.JOB_PROCESSOR.CREATING_NEW_LOG} ${feedUrl}`);
+        importLog = new this.logRepo({
           feedUrl,
           timestamp: new Date(),
           totalFetched: 1,
           newJobs: 0,
           updatedJobs: 0,
-          failedJobs: []
+          failedJobs: [],
         });
       } else {
-        this.logger.log(`${LOG_MESSAGES.JOB_PROCESSOR.UPDATING_EXISTING_LOG} ${feedUrl}`);
-        log.totalFetched += 1;
-        log.timestamp = new Date();
+        this.log.log(`${LOG_MESSAGES.JOB_PROCESSOR.UPDATING_EXISTING_LOG} ${feedUrl}`);
+        importLog.totalFetched += 1;
+        importLog.timestamp = new Date();
       }
 
       try {
-    
-        const existing = await this.jobModel.findOne({ guid: parsedJob.guid });
-        
-        if (existing) {
-          this.logger.log(`${LOG_MESSAGES.JOB_PROCESSOR.UPDATING_EXISTING_JOB} ${parsedJob.guid}`);
-          await this.jobModel.updateOne({ guid: parsedJob.guid }, parsedJob);
-          log.updatedJobs += 1;
+        // Check for existing job
+        const foundJob = await this.jobRepo.findOne({ guid: jobDetails.guid });
+
+        if (foundJob) {
+          this.log.log(`${LOG_MESSAGES.JOB_PROCESSOR.UPDATING_EXISTING_JOB} ${jobDetails.guid}`);
+          await this.jobRepo.updateOne({ guid: jobDetails.guid }, jobDetails);
+          importLog.updatedJobs += 1;
         } else {
-          this.logger.log(`${LOG_MESSAGES.JOB_PROCESSOR.CREATING_NEW_JOB} ${parsedJob.guid}`);
-          await new this.jobModel(parsedJob).save();
-          log.newJobs += 1;
+          this.log.log(`${LOG_MESSAGES.JOB_PROCESSOR.CREATING_NEW_JOB} ${jobDetails.guid}`);
+          await new this.jobRepo(jobDetails).save();
+          importLog.newJobs += 1;
         }
-        
-        this.logger.log(`${LOG_MESSAGES.JOB_PROCESSOR.SUCCESSFULLY_PROCESSED_JOB} ${parsedJob.title}`);
-      } catch (jobError) {
-        this.logger.error(LOG_MESSAGES.JOB_PROCESSOR.ERROR_PROCESSING_JOB.replace('{guid}', parsedJob.guid).replace('{error}', jobError.message));
-        log.failedJobs.push({ 
-          reason: jobError.message, 
-          jobData: parsedJob 
+
+        this.log.log(`${LOG_MESSAGES.JOB_PROCESSOR.SUCCESSFULLY_PROCESSED_JOB} ${jobDetails.title}`);
+      } catch (jobErr) {
+        this.log.error(
+          LOG_MESSAGES.JOB_PROCESSOR.ERROR_PROCESSING_JOB
+            .replace('{guid}', jobDetails.guid)
+            .replace('{error}', jobErr.message)
+        );
+        importLog.failedJobs.push({
+          reason: jobErr.message,
+          jobData: jobDetails,
         });
       }
 
-      await log.save();
-      this.logger.log(`${LOG_MESSAGES.JOB_PROCESSOR.IMPORT_LOG_SAVED} ${feedUrl}`);
-      
-    } catch (error) {
-      this.logger.error(LOG_MESSAGES.JOB_PROCESSOR.ERROR_IN_PROCESSOR.replace('{error}', error.message));
-      ErrorHandler.handleServiceError(error, 'handleJobImport');
+      await importLog.save();
+      this.log.log(`${LOG_MESSAGES.JOB_PROCESSOR.IMPORT_LOG_SAVED} ${feedUrl}`);
+    } catch (err) {
+      this.log.error(LOG_MESSAGES.JOB_PROCESSOR.ERROR_IN_PROCESSOR.replace('{error}', err.message));
+      ErrorHandler.handleServiceError(err, 'processImportTask');
     }
   }
 }
