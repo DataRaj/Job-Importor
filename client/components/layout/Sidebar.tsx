@@ -17,7 +17,7 @@ import {
 
 const navigation = [
   { name: 'Dashboard', href: '/dashboard', icon: LayoutDashboard },
-  { name: 'Jobs', href: '/dashboard/jobs', icon: Workflow },
+  { name: 'Jobs', href: '/jobs', icon: Workflow },
   // { name: 'Categories', href: '/dashboard/categories', icon: FolderOpen },
   // { name: 'Shopkeepers', href: '/dashboard/shopkeepers', icon: Users },
   // { name: 'Orders', href: '/dashboard/orders', icon: ShoppingCart },
