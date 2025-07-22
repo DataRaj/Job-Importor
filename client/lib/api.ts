@@ -5,8 +5,7 @@ import {
   TriggerImportResponse,
 } from '@/types/api'; 
 
-const API_BASE_URL = 'https://job-importor.onrender.com/api'; 
-
+const API_BASE_URL = 'https://job-importor.onrender.com/api'; // Default base URL
 const api = axios.create({
   baseURL: API_BASE_URL,
   headers: {
