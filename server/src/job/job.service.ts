@@ -140,5 +140,13 @@ export class JobService {
       
     }
   } 
+  async fetchJobs(limit: number, offset: number): Promise<any>{
+    try {
+      this.logger.log(`Fetching ${limit} jobs from DB from id: ${offset}`)
+    } catch(error){
+      this.logger.error(`Error fetching the Data from the MongoDB ${error.message}`)
+      
+    }
+  }
 
 }
