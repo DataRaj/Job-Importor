@@ -10,19 +10,18 @@ import DashboardLayout from '@/components/layout/DashboardLayout';
 import { getImportLogs, triggerImport } from '@/lib/api';
 import { ImportLog, Pagination } from '@/types/api';
 import { Button } from '@/components/ui/button';
-// import { useToast } from '@/hooks/useToast';
-import { useDebounce } from 'use-debounce';
-import { toast } from 'sonner'; // Assuming you have a toast component
+// import { useDebounce } from 'use-debounce';
+import { toast } from 'sonner'; 
+
 export default function ImportLogsPage() {
   const [isTriggering, setIsTriggering] = useState(false); 
-  // const { toast } = useToast();
   const [logs, setLogs] = useState<ImportLog[]>([]);
   const [pagination, setPagination] = useState<Pagination>({ page: 1, limit: 10, total: 0, totalPages: 0 });
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
   const [searchTerm, setSearchTerm] = useState('');
-  const [debouncedSearchTerm] = useDebounce(searchTerm, 500); 
+  // const [debouncedSearchTerm] = useDebounce(searchTerm, 500); 
 
   const [currentPage, setCurrentPage] = useState(1);
   const [currentLimit, setCurrentLimit] = useState(10);
@@ -34,7 +33,7 @@ export default function ImportLogsPage() {
       const response = await getImportLogs({
         page: currentPage,
         limit: currentLimit,
-        feedUrl: debouncedSearchTerm || undefined, 
+        // feedUrl: debouncedSearchTerm || undefined, 
       });
       setLogs(response.data);
       setPagination(response.pagination);
@@ -44,7 +43,7 @@ export default function ImportLogsPage() {
     } finally {
       setLoading(false);
     }
-  }, [currentPage, currentLimit, debouncedSearchTerm]); 
+  }, [currentPage, currentLimit]); 
 
   const handleTrigger = async () => {
     setIsTriggering(true);
@@ -73,9 +72,9 @@ export default function ImportLogsPage() {
     fetchLogs();
   }, [fetchLogs]);
 
-  useEffect(() => {
-    setCurrentPage(1);
-  }, [debouncedSearchTerm]);
+  // useEffect(() => {
+  //   setCurrentPage(1);
+  // }, [debouncedSearchTerm]);
 
   const getLogStats = () => {
     const totalFetched = logs.reduce((sum, log) => sum + log.totalFetched, 0);

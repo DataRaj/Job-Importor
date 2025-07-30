@@ -1,0 +1,19 @@
+# Dependency directories
+node_modules
+.next
+dist
+
+# Lockfiles
+pnpm-lock.yaml
+pnpm-workspace.yaml
+
+# Build artifacts and output
+*.log
+coverage
+*.tsbuildinfo
+
+# Public/static assets
+public/**/*
+
+# Generated files
+components.json

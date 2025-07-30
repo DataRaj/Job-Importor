@@ -7,7 +7,7 @@ const inter = Inter({ subsets: ['latin'] });
 
 export const metadata: Metadata = {
   title: ' ',
-  description: 'Full-featured admin dashboard for quick commerce operations',
+  description: 'Job Importor - Import jobs from various sources',
 };
 
 export default function RootLayout({

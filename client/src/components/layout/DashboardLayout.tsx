@@ -1,7 +1,7 @@
 'use client';
 import { useState } from 'react';
 import { useRouter } from 'next/navigation';
-import { useAuthStore } from '@/lib/store';
+// import { useAuthStore } from '@/lib/';
 import Sidebar from './Sidebar';
 import Header from './Header';
 
@@ -10,7 +10,7 @@ interface DashboardLayoutProps {
 }
 
 export default function DashboardLayout({ children }: DashboardLayoutProps) {
-  const { isAuthenticated } = useAuthStore();
+  // const { isAuthenticated } = useAuthStore();
   const router = useRouter();
   const [sidebarOpen, setSidebarOpen] = useState(false);
 
@@ -21,10 +21,6 @@ export default function DashboardLayout({ children }: DashboardLayoutProps) {
   const toggleSidebar = () => {
     setSidebarOpen(!sidebarOpen);
   };
-
-  if (!isAuthenticated) {
-    return null;
-  }
 
   return (
     <div className="flex h-screen bg-gray-50">
