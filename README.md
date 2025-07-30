@@ -98,3 +98,6 @@ REDIS_PORT=
 REDIS_PASSWORD=
 
 Replace YOUR_REDIS_PASSWORD and redis-host:port with your actual Redis Cloud credentials.
+
+**License**
+<p>There is a no control over the license you can clone and use for yourself, and Enjoy  :)))</p>
