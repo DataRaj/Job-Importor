@@ -9,6 +9,7 @@ import { Search, Loader2, Database, Clock, Zap, CheckCircle, XCircle, Play, Rota
 import DashboardLayout from '@/components/layout/DashboardLayout';
 import { getImportLogs, triggerImport } from '@/lib/api';
 import { ImportLog, Pagination } from '@/types/api';
+import { ErrorBoundary } from '@/components/errorboundries';
 import { Button } from '@/components/ui/button';
 // import { useDebounce } from 'use-debounce';
 import { toast } from 'sonner'; 
@@ -16,39 +17,65 @@ import { toast } from 'sonner';
 export default function ImportLogsPage() {
   const [isTriggering, setIsTriggering] = useState(false); 
   const [logs, setLogs] = useState<ImportLog[]>([]);
-  const [pagination, setPagination] = useState<Pagination>({ page: 1, limit: 10, total: 0, totalPages: 0 });
-  const [loading, setLoading] = useState(true);
+  const [pagination, setPagination] = useState<Pagination>({ 
+    page: 1, 
+    limit: 10, 
+    total: 0, 
+    totalPages: 0 
+  });  const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
-
+    const [mounted, setMounted] = useState(false);
   const [searchTerm, setSearchTerm] = useState('');
-  // const [debouncedSearchTerm] = useDebounce(searchTerm, 500); 
-
   const [currentPage, setCurrentPage] = useState(1);
   const [currentLimit] = useState(10);
 
+    // Track if component is mounted to avoid hydration issues
+  useEffect(() => {
+    setMounted(true);
+  }, []);
+
   const fetchLogs = useCallback(async () => {
+    if (!mounted) return; // Don't fetch until mounted
+    
     setLoading(true);
     setError(null);
+    
     try {
+      console.log('Fetching logs...'); // Debug log
       const response = await getImportLogs({
         page: currentPage,
         limit: currentLimit,
-        // feedUrl: debouncedSearchTerm || undefined, 
       });
-      setLogs(response.data);
-      setPagination(response.pagination);
+      
+      console.log('Logs response:', response); // Debug log
+      setLogs(response.data || []);
+      setPagination(response.pagination || { page: 1, limit: 10, total: 0, totalPages: 0 });
     } catch (err: any) {
       console.error('Failed to fetch import logs:', err);
-      setError(err.message || 'Failed to load import logs.');
+      const errorMessage = err?.response?.data?.message || err?.message || 'Failed to load import logs.';
+      setError(errorMessage);
+      
+      // Set empty state on error
+      setLogs([]);
+      setPagination({ page: 1, limit: 10, total: 0, totalPages: 0 });
     } finally {
       setLoading(false);
     }
-  }, [currentPage, currentLimit]); 
+  }, [mounted, currentPage, currentLimit]);
 
-  const handleTrigger = async () => {
+  useEffect(() => {
+    if (mounted) {
+      fetchLogs();
+    }
+  }, [mounted, fetchLogs]);
+
+   const handleTrigger = async () => {
     setIsTriggering(true);
     try {
+      console.log('Triggering import...'); // Debug log
       const response = await triggerImport();
+      console.log('Trigger response:', response); // Debug log
+      
       toast.success("Jobs Imported successfully!", {
         description: response.message,
         icon: '✅',
@@ -56,11 +83,13 @@ export default function ImportLogsPage() {
         richColors: true,
         duration: 3000,
       });
-      await fetchLogs(); 
+      
+      // Refresh logs after successful trigger
+      await fetchLogs();
     } catch (error: any) {
       console.error('Failed to trigger import:', error);
       toast.error("Import Failed", {
-        description: error.response?.data?.message || 'An unexpected error occurred.',
+        description: error?.response?.data?.message || 'An unexpected error occurred.',
         duration: 5000,
       });
     } finally {
@@ -68,9 +97,24 @@ export default function ImportLogsPage() {
     }
   };
 
+
+
   useEffect(() => {
     fetchLogs();
   }, [fetchLogs]);
+
+
+    // Show loading state until mounted to prevent hydration mismatch
+  if (!mounted) {
+    return (
+      <DashboardLayout>
+        <div className="flex justify-center items-center h-48">
+          <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-gray-900"></div>
+          <span className="ml-2 text-gray-500">Loading...</span>
+        </div>
+      </DashboardLayout>
+    );
+  }
 
   // useEffect(() => {
   //   setCurrentPage(1);
@@ -98,6 +142,8 @@ export default function ImportLogsPage() {
   };
 
   return (
+    <ErrorBoundary>
+
     <DashboardLayout>
       <div className="space-y-6">
         <div>
@@ -162,7 +208,7 @@ export default function ImportLogsPage() {
                   value={searchTerm}
                   onChange={(e) => setSearchTerm(e.target.value)}
                   className="pl-10"
-                />
+                  />
               </div>
               <div className="flex space-x-2 w-full sm:w-auto">
                  <Button onClick={handleTrigger} disabled={isTriggering} className="w-full sm:w-auto">
@@ -251,7 +297,7 @@ export default function ImportLogsPage() {
                     size="sm"
                     onClick={() => setCurrentPage(prev => Math.min(pagination.totalPages, prev + 1))}
                     disabled={currentPage === pagination.totalPages}
-                  >
+                    >
                     Next
                   </Button>
                 </div>
@@ -261,5 +307,6 @@ export default function ImportLogsPage() {
         </Card>
       </div>
     </DashboardLayout>
+    </ErrorBoundary>
   );
 }
