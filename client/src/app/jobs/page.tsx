@@ -6,7 +6,7 @@ import { Badge } from '@/components/ui/badge';
 import { Input } from '@/components/ui/input';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
-import { Search, Briefcase, MapPin, DollarSign, Calendar, Tag } from 'lucide-react'; // Changed icons
+import { Search, Briefcase, MapPin, DollarSign, Calendar } from 'lucide-react'; // Changed icons
 import DashboardLayout from '@/components/layout/DashboardLayout';
 
 // --- Helper for Debouncing ---
@@ -148,7 +148,7 @@ export default function JobSearchPage() {
   useEffect(() => {
     // This effect runs when debouncedSearchTerm, jobTypeFilter, or categoryFilter changes
     const applyFilters = () => {
-      let tempJobs = jobs.filter(job => {
+      const tempJobs = jobs.filter(job => {
         const matchesSearch = job.title.toLowerCase().includes(debouncedSearchTerm.toLowerCase()) ||
                               job.company.toLowerCase().includes(debouncedSearchTerm.toLowerCase()) ||
                               job.location.toLowerCase().includes(debouncedSearchTerm.toLowerCase());

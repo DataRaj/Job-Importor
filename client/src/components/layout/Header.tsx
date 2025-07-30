@@ -6,11 +6,10 @@ import {
   DropdownMenu, 
   DropdownMenuContent, 
   DropdownMenuItem, 
-  DropdownMenuTrigger 
 } from '@/components/ui/dropdown-menu';
 // import { Avatar, AvatarFallback } from '@/components/ui/avatar';
 import { LogOut, User, Menu } from 'lucide-react';
-import { useRouter } from 'next/navigation';
+// import { useRouter } from 'next/navigation';
 
 interface HeaderProps {
   onMenuClick?: () => void;
@@ -18,7 +17,6 @@ interface HeaderProps {
 
 export default function Header({ onMenuClick }: HeaderProps) {
   // const { user, logout } = useAuthStore();
-  const router = useRouter();
 
   // const handleLogout = () => {
   //   logout();

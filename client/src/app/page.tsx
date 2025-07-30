@@ -24,7 +24,7 @@ export default function ImportLogsPage() {
   // const [debouncedSearchTerm] = useDebounce(searchTerm, 500); 
 
   const [currentPage, setCurrentPage] = useState(1);
-  const [currentLimit, setCurrentLimit] = useState(10);
+  const [currentLimit] = useState(10);
 
   const fetchLogs = useCallback(async () => {
     setLoading(true);

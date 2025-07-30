@@ -1,9 +1,0 @@
-#!/bin/sh
-echo "🔍 Running lint checks before commit..."
-
-if [ -z "$(git diff --cached --name-only)" ]; then
-  echo "⚠️  No files staged for commit. Skipping lint-staged."
-  exit 0
-fi
-
-pnpm exec lint-staged

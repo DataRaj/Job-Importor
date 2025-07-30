@@ -4,13 +4,8 @@ import Link from 'next/link';
 import { usePathname } from 'next/navigation';
 import { cn } from '@/lib/utils';
 import { 
-  LayoutDashboard, 
-  Package, 
-  FolderOpen, 
-  Users, 
-  ShoppingCart, 
+  LayoutDashboard ,
   Settings,
-  Store,
   X,
   Workflow
 } from 'lucide-react';
