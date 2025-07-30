@@ -1,0 +1,10 @@
+{
+    "buildCommand" :"pnom build",
+    "outputDirectory": ".next",
+    "framework": "nextjs",
+    "function": {
+        "app/**/*.tsx": {
+            "runtime": "nodejs23"
+        }
+    }
+}
