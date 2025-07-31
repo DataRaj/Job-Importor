@@ -6,7 +6,7 @@ import { Badge } from '@/components/ui/badge';
 import { Input } from '@/components/ui/input';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
-import { Search, MapPin, DollarSign, Calendar } from 'lucide-react'; // Changed icons
+import { Search, MapPin, Calendar } from 'lucide-react'; // Changed icons
 import  DashboardLayout from '@/components/layout/DashboardLayout';
 import { PaginationDemo } from '@/components/job_pagination';
 import { fetchTheJobs } from '@/lib/api';
@@ -316,7 +316,7 @@ export default function JobSearchPage() {
                         </TableCell>
                         <TableCell>
                           <span className="flex items-center">
-                            <DollarSign className="h-3 w-3 mr-1 text-green-600" />
+                            {/* <DollarSign className="h-3 w-3 mr-1 text-green-600" /> */}
                             {Math.random() < 0.5 ? '₹' + (Math.floor(Math.random() * 20) + 5) + ' LPA' : '₹' + (Math.floor(Math.random() * 10) + 2) + ' LPA'}
                           </span>
                         </TableCell>

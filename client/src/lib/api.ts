@@ -102,17 +102,25 @@ export const checkApiHealth = async (): Promise<boolean> => {
 export const fetchTheJobs = async (page: number, limit: number): Promise<{ jobs: Job[]; total: number }> => {
   try {
     const response = await api.get("/jobs", {
-      params: { page, limit },
+      params: { page, limit }
     });
-    return response.data;
+    console.log("Fetched jobs:", response.status, response.data.data);
+    return response.data && Array.isArray(response.data.data)
+      ? {
+          jobs: response.data.data,
+          total: response.data.total,
+        }
+      : {
+          jobs: [],
+          total: 0,
+        };
   } catch (error) {
     console.error("Error fetching jobs:", error);
 
     // Return fallback data instead of throwing
     return {
-      page: 1,
-      limit: 10,
-      error: "Failed to fetch jobs",
-    } as unknown as { jobs: Job[]; total: number };
+      jobs: [],
+      total: 0,
+    };
   }
 }
