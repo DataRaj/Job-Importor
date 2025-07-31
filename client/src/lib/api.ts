@@ -3,6 +3,8 @@ import {
   GetImportLogsResponse,
   GetImportLogsQuery,
   TriggerImportResponse,
+  Pagination,
+  Job,
 } from "@/types/api";
 
 // Use environment variable with fallback
@@ -93,5 +95,25 @@ export const checkApiHealth = async (): Promise<boolean> => {
   } catch (error) {
     console.error("API health check failed:", error);
     return false;
+  }
+}
+
+
+
+export const fetchTheJobs = async (page: number, limit: number): Promise<{ jobs: Job[]; total: number }> => {
+  try {
+    const response = await api.get("/jobs", {
+      params: { page, limit },
+    });
+    return response.data;
+  } catch (error) {
+    console.error("Error fetching jobs:", error);
+
+    // Return fallback data instead of throwing
+    return {
+      page: 1,
+      limit: 10,
+      error: "Failed to fetch jobs",
+    } as unknown as { jobs: Job[]; total: number };
   }
 }

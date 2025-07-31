@@ -41,3 +41,10 @@ export interface TriggerImportResponse {
   message: string;
   timestamp: string; // ISO 8601 string
 }
+
+export interface Job {
+  guid: string;
+  title: string;
+  link: string;
+  description: string;
+}
