@@ -70,9 +70,9 @@ export class JobController {
   }
   
   @Get('jobs')
-  async getImportJobs(@Body() body): Promise<{ success: boolean; data: any[] }> {
+  async getImportJobs(@Query() query: { limit: number; offset: number }): Promise<{ success: boolean; data: any[] }> {
     try {
-      const jobs = await this.jobService.fetchJobs(body.limit, body.offset);
+      const jobs = await this.jobService.fetchJobs(query.limit, query.offset);
       return {
         success: true,
         data: jobs,
