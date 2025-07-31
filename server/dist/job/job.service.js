@@ -24,6 +24,7 @@ const mongoose_1 = require("@nestjs/mongoose");
 const mongoose_2 = require("mongoose");
 const importor_log_schema_1 = require("./schemas/importor-log.schema");
 const common_2 = require("../common");
+const jobs_schema_1 = require("./schemas/jobs.schema");
 const FEEDS = [
     'https://jobicy.com/?feed=job_feed',
     'https://jobicy.com/?feed=job_feed&job_categories=smm&job_types=full-time',
@@ -38,10 +39,12 @@ const FEEDS = [
 let JobService = JobService_1 = class JobService {
     jobQueue;
     logModel;
+    jobModel;
     logger = new common_1.Logger(JobService_1.name);
-    constructor(jobQueue, logModel) {
+    constructor(jobQueue, logModel, jobModel) {
         this.jobQueue = jobQueue;
         this.logModel = logModel;
+        this.jobModel = jobModel;
     }
     async fetchAndQueueJobs() {
         this.logger.log(common_2.LOG_MESSAGES.JOB_SERVICE.START_SCHEDULED_IMPORT);
@@ -134,6 +137,18 @@ let JobService = JobService_1 = class JobService {
             common_2.ErrorHandler.handleServiceError(error, 'removeAllJobs');
         }
     }
+    async fetchJobs(limit, offset) {
+        try {
+            this.logger.log(`Fetching ${limit} jobs from DB from id: ${offset}`);
+            const jobs = await this.jobModel.find().skip(offset).limit(limit).lean().exec();
+            this.logger.log(`Successfully fetched ${jobs.length} jobs`);
+            return jobs;
+        }
+        catch (error) {
+            this.logger.error(`Error fetching the Data from the MongoDB ${error.message}`);
+            common_2.ErrorHandler.handleDatabaseError(error, 'fetchJobs');
+        }
+    }
 };
 exports.JobService = JobService;
 __decorate([
@@ -146,7 +161,9 @@ exports.JobService = JobService = JobService_1 = __decorate([
     (0, common_1.Injectable)(),
     __param(0, (0, bullmq_1.InjectQueue)('job-import-queue')),
     __param(1, (0, mongoose_1.InjectModel)(importor_log_schema_1.ImportLog.name)),
+    __param(2, (0, mongoose_1.InjectModel)(jobs_schema_1.Job.name)),
     __metadata("design:paramtypes", [bullmq_2.Queue,
+        mongoose_2.Model,
         mongoose_2.Model])
 ], JobService);
 //# sourceMappingURL=job.service.js.map

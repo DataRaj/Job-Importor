@@ -1,4 +1,4 @@
-import { Controller, Get, Post, Query, HttpException, Logger, Delete } from '@nestjs/common';
+import { Controller, Get, Post, Query, HttpException, Logger, Delete, Body } from '@nestjs/common';
 import { JobService } from './job.service';
 import { 
   ImportLogResponseDto, 
@@ -69,16 +69,16 @@ export class JobController {
     }
   }
   
-  // @Get('import-jobs')
-  // async getImportJobs(): Promise<{ success: boolean; data: any[] }> {
-  //   try {
-  //     const jobs = await this.jobService.getImportJobs();
-  //     return {
-  //       success: true,
-  //       data: jobs,
-  //     };
-  //   } catch (error) {
-  //     ErrorHandler.handleServiceError(error, 'getImportJobs');
-  //   }
-  // }
+  @Get('jobs')
+  async getImportJobs(@Body() body): Promise<{ success: boolean; data: any[] }> {
+    try {
+      const jobs = await this.jobService.fetchJobs(body.limit, body.offset);
+      return {
+        success: true,
+        data: jobs,
+      };
+    } catch (error) {
+      ErrorHandler.handleServiceError(error, 'getImportJobs');
+    }
+  }
 }

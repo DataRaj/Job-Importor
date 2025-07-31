@@ -72,6 +72,18 @@ let JobController = JobController_1 = class JobController {
             common_2.ErrorHandler.handleServiceError(error, 'removeAllJobs');
         }
     }
+    async getImportJobs(body) {
+        try {
+            const jobs = await this.jobService.fetchJobs(body.limit, body.offset);
+            return {
+                success: true,
+                data: jobs,
+            };
+        }
+        catch (error) {
+            common_2.ErrorHandler.handleServiceError(error, 'getImportJobs');
+        }
+    }
 };
 exports.JobController = JobController;
 __decorate([
@@ -93,6 +105,13 @@ __decorate([
     __metadata("design:paramtypes", []),
     __metadata("design:returntype", Promise)
 ], JobController.prototype, "removeAllJobs", null);
+__decorate([
+    (0, common_1.Get)('jobs'),
+    __param(0, (0, common_1.Body)()),
+    __metadata("design:type", Function),
+    __metadata("design:paramtypes", [Object]),
+    __metadata("design:returntype", Promise)
+], JobController.prototype, "getImportJobs", null);
 exports.JobController = JobController = JobController_1 = __decorate([
     (0, common_1.Controller)('api'),
     __metadata("design:paramtypes", [job_service_1.JobService])

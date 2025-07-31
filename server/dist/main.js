@@ -9,7 +9,7 @@ async function bootstrap() {
     console.log(`server running on port http://localhost:${process.env.PORT || 3001}`);
     const configService = app.get(config_1.ConfigService);
     app.enableCors({
-        origin: 'http://localhost:3000',
+        origin: '*',
         methods: ['GET', 'POST', 'PUT', 'DELETE'],
         credentials: true,
     });

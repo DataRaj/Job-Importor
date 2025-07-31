@@ -9,6 +9,7 @@ import { Model } from 'mongoose';
 import { ImportLog } from './schemas/importor-log.schema';
 import { GetImportLogsQueryDto } from './dto/import-log.dto';
 import { ErrorHandler, LOG_MESSAGES } from '../common';
+import { Job } from './schemas/jobs.schema';
 
 const FEEDS = [
   'https://jobicy.com/?feed=job_feed',
@@ -28,6 +29,7 @@ export class JobService {
   constructor(
     @InjectQueue('job-import-queue') private jobQueue: Queue,
     @InjectModel(ImportLog.name) private logModel: Model<ImportLog>,
+    @InjectModel(Job.name) private jobModel: Model<Job>
   ) {}
 
   @Cron('0 * * * *')
@@ -142,11 +144,13 @@ export class JobService {
   } 
   async fetchJobs(limit: number, offset: number): Promise<any>{
     try {
-      this.logger.log(`Fetching ${limit} jobs from DB from id: ${offset}`)
+      this.logger.log(`Fetching ${limit} jobs from DB from id: ${offset}`);
+      const jobs = await this.jobModel.find().skip(offset).limit(limit).lean().exec();
+      this.logger.log(`Successfully fetched ${jobs.length} jobs`);
+      return jobs;
     } catch(error){
-      this.logger.error(`Error fetching the Data from the MongoDB ${error.message}`)
-      
+      this.logger.error(`Error fetching the Data from the MongoDB ${error.message}`);
+      ErrorHandler.handleDatabaseError(error, 'fetchJobs');
     }
   }
-
 }

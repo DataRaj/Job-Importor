@@ -10,4 +10,8 @@ export declare class JobController {
         success: boolean;
         message: string;
     }>;
+    getImportJobs(body: any): Promise<{
+        success: boolean;
+        data: any[];
+    }>;
 }
