@@ -3,7 +3,6 @@ import {
   GetImportLogsResponse,
   GetImportLogsQuery,
   TriggerImportResponse,
-  Pagination,
   Job,
 } from "@/types/api";
 
