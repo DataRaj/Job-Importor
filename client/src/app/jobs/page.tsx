@@ -406,7 +406,6 @@ const jobLocations = [
   "Port Blair, Andaman and Nicobar Islands"
 ];
 
-// Helper to get a random location
 const getRandomJobLocation = () => {
   return jobLocations[Math.floor(Math.random() * jobLocations.length)];
 };
@@ -803,7 +802,7 @@ export default function JobSearchPage() {
             <div className="flex justify-center mt-4">
               <PaginationDemo
               // @ts-ignore
-                numberOfPages={Math.ceil(filteredJobs.length / limit)} 
+                numberOfPages={Math.ceil((filteredJobs ? filteredJobs.length : 0) / limit)} 
                 activePage={page} 
                 onNextJobPage={onNextJobPage}
                 onPrevJobPage={onPrevJobPage}
